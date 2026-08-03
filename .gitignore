@@ -1,0 +1,9 @@
+# Ignora l'ambiente virtuale
+venv/
+
+# Ignora la cartella degli audio salvati
+uploads/
+
+# Ignora i file di cache generati da Python
+__pycache__/
+*.pyc
