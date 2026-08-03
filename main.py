@@ -2,14 +2,16 @@ import os
 import shutil
 import uuid
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse 
+from fastapi.statifiles import StaticFiles
 from celery.result import AsyncResult
-
 from worker import esegui_trascrizione_finta, celery_app
 
 # Avvio server
 
 app = FastAPI(title="Server Trascrizioni Asincrone") 
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 # Crea una cartella chiamata uploads per salvare gli audio in arrivo
 CARTELLA_UPLOAD = "uploads"
 os.makedirs(CARTELLA_UPLOAD, exist_ok=True)  #se esiste gia, non lo fare
@@ -47,7 +49,7 @@ async def ricevi_audio(file: UploadFile = File(...)):
     task = esegui_trascrizione_finta.delay(percorso_file)
    
     return{
-        "messaggio": "Audio ricevuto e inviato in coda di trascrizione.".
+        "messaggio": "Audio ricevuto e inviato in coda di trascrizione.",
         "task_id": task.id
     }
    
@@ -58,7 +60,24 @@ async def ricevi_audio(file: UploadFile = File(...)):
         "codice_univoco" : codice_univoco,
         "file_salvato" : nuovo_nomefile
     }
+@app.get("/status/{task_id}")
+def controlla_stato(task_id: str):
+    risultato = AsyncResult(task_id, app=celery_app)
+    
+    risposta = {
+        "stato": risultato.status # "PENDING/PROCESSING/SUCCES/FAILURE"
+    }
 
-@app.get("/")
+    if risultato.status == "SUCCES":
+        risposta["testo_trascritto"] = risultato.result
+    elif risultato.status == "FAILURE":
+        risposta["errore"] = str(risultato.result)
+    
+    return risposta
+
+@app.get("/", responses_class=HTMLResponse)
 def home():
+    #legge il file HTML e lo mostra nel browser
+    with open("static/index.html", "r", encoding="utf-8") as f:
+    return f.read()
     return {"status": "Il server FastAPI è online!"}
