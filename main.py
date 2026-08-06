@@ -3,7 +3,7 @@ import shutil
 import uuid
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse 
-from fastapi.statifiles import StaticFiles
+from fastapi.staticfiles import StaticFiles
 from celery.result import AsyncResult
 from worker import esegui_trascrizione_finta, celery_app
 
@@ -68,16 +68,16 @@ def controlla_stato(task_id: str):
         "stato": risultato.status # "PENDING/PROCESSING/SUCCES/FAILURE"
     }
 
-    if risultato.status == "SUCCES":
+    if risultato.status == "SUCCESS":
         risposta["testo_trascritto"] = risultato.result
     elif risultato.status == "FAILURE":
         risposta["errore"] = str(risultato.result)
     
     return risposta
 
-@app.get("/", responses_class=HTMLResponse)
+@app.get("/", response_class = HTMLResponse)
 def home():
-    #legge il file HTML e lo mostra nel browser
+    # legge il file HTML e lo mostra nel browser
     with open("static/index.html", "r", encoding="utf-8") as f:
-    return f.read()
-    return {"status": "Il server FastAPI è online!"}
+        return f.read()
+   # return {"status": "Il server FastAPI è online!"}
