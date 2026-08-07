@@ -36,7 +36,9 @@ async function toggleRecording() {
             const audioBlob = new Blob(audioChuncks, {type: "audio/webm" });
             
             console.log("File audio creato! Dimensione:", audioBlob.size, "byte");
+            //Passiamo il file alla funzione che lo spedirà
 
+            inviaAudio(audioBlob);
             // Spenge il microfono di Windows/Mac
             stream.getTracks().forEach(track => track.stop());
          };
@@ -72,4 +74,57 @@ async function toggleRecording() {
         recordButton.style.backgroundColor = "";
         recordButton.style.color = "black";
     }
+}
+async function inviaAudio(blob) {
+    // Creiamo un pacco postale
+
+    const formData = new FormData();
+
+    // Inseriamo il file nel pacco e gli diamo un nome
+
+    formData.append("file", blob, "audio.webm");
+
+    try {
+
+        console.log("Spedizione file in corso..");
+
+    //  Spediamo il pacco
+        const response = await fetch("/upload", {
+            method: "POST",
+            body: formData
+        });
+
+    // Risposta del server
+    const data = await response.json();
+
+        if(data.task_id) {
+            console.log("Audio ricevuto dal server! l'ID è: ", data.task_id);
+            aggiungiTaskInTabella(data.task_id);
+        }
+        
+    }
+    catch (err){
+        console.error("Errore di connessione con il server:", err);
+    }
+}
+function aggiungiTaskInTabella(taskId){
+    //  Creiamo un nuovo elemento <tr>
+    alert("Disegno la riga per l'id: " + taskId + "..");
+
+    const tr = document.createElement("tr");
+
+    //  Diamo un ID alla riga
+    tr.id = "row-${taskId}";
+
+    // Essendo troppo lungo ne prendiamo solo le primo 8 cifre
+    const shortId = taskId.substring(0, 8);
+
+    // Inseriamo la riga
+    tr.innerHTML = `
+    <td><small>${shortId}</small></td>
+    <td style="color: #f39c12; font-weight: bold;" id="status-${taskId}"> In Coda... </td>
+    <td id="tex-${taskId}">-</td>
+    `;
+    // Inseriamo questa nuova riga nella tabella
+    queueBody.prepend(tr);
 }
