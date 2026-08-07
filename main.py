@@ -69,7 +69,7 @@ def controlla_stato(task_id: str):
     }
 
     if risultato.status == "SUCCESS":
-        risposta["testo_trascritto"] = risultato.result
+        risposta["risultato"] = risultato.result
     elif risultato.status == "FAILURE":
         risposta["errore"] = str(risultato.result)
     

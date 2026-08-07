@@ -109,22 +109,90 @@ async function inviaAudio(blob) {
 }
 function aggiungiTaskInTabella(taskId){
     //  Creiamo un nuovo elemento <tr>
-    alert("Disegno la riga per l'id: " + taskId + "..");
+    //alert("Disegno la riga per l'id: " + taskId + "..");
 
     const tr = document.createElement("tr");
 
     //  Diamo un ID alla riga
-    tr.id = "row-${taskId}";
+    tr.id = "row-" + taskId;
 
-    // Essendo troppo lungo ne prendiamo solo le primo 8 cifre
-    const shortId = taskId.substring(0, 8);
+    // Creo la prima cella (ID)
+    const tdId = document.createElement("td");
+    tdId.innerHTML = "<small>" + taskId.substring(0, 8) + "</small>";
 
-    // Inseriamo la riga
-    tr.innerHTML = `
-    <td><small>${shortId}</small></td>
-    <td style="color: #f39c12; font-weight: bold;" id="status-${taskId}"> In Coda... </td>
-    <td id="tex-${taskId}">-</td>
-    `;
+    // Creo la seconda cella (STATO)
+
+    const tdStatus = document.createElement("td");
+    tdStatus.id = "status-" + taskId;
+    tdStatus.style.color = "#F39C12";
+    tdStatus.style.fontWeight = "bold";
+    tdStatus.textContent = "In coda...";
+
+    // Creo la terza cella (TESTO)
+
+    const tdText = document.createElement("td");
+    tdText.id = "text-" + taskId;
+    tdText.textContent = "-";
+
+    // Inseriamo le celle dentro la riga
+
+    tr.appendChild(tdId);
+    tr.appendChild(tdStatus);
+    tr.appendChild(tdText);
+    
     // Inseriamo questa nuova riga nella tabella
-    queueBody.prepend(tr);
+
+    document.getElementById("queueBody").prepend(tr);
+    //const tbody = document.getElementById("queueBody");
+    //queueBody.prepend(tr);
+
+    controlloStatoTask(taskId);
+}
+function controlloStatoTask(taskId){
+    
+    // Fa ripetere questo blocco di codice ogni 2 secondi
+    const interval = setInterval(async () => {
+        try{
+            // Domanda al server  dello stato dell'id
+            const response = await fetch ("/status/" + taskId);
+            const data = await response.json();
+
+            console.log("Risposta dal server per ID " + taskId + ":", data);
+            // Prendiamo dalla tabella 
+            const tdStatus = document.getElementById(`status-${taskId}`);
+            const tdText = document.getElementById(`text-${taskId}`);
+            // Controllo la risposta del server
+
+            if(data.stato === "SUCCESS") {
+                //SUCCESSO
+                tdStatus.textContent = "Completato! :D";
+                tdStatus.style.color = "#009900";
+
+                tdText.textContent = data.risultato || data.result || "Trascrizione vuota";
+
+                clearInterval(interval); //stop alla domanda del server
+            }
+            else if (data.stato === "FAILURE") {
+                //ERRORE
+                tdStatus.textContent = "Errore :(";
+                tdStatus.style.color = "#FF2626";
+                tdText.textContent = "Trascrizione fallita.";
+                
+                clearInterval(interval);
+            }
+
+            else {
+                //PENDING 
+
+                tdStatus.textContent = "Elaborazione in corso...";
+
+            }
+        }
+        catch(err) {
+            console.error("Errore durante il controllo dello stato.", err);
+            
+            clearInterval(interval);
+        }
+
+    }, 2000); //2000 = 2 secondi
 }
