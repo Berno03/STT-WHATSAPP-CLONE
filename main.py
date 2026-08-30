@@ -5,7 +5,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse 
 from fastapi.staticfiles import StaticFiles
 from celery.result import AsyncResult
-from worker import esegui_trascrizione_finta, celery_app
+from worker import esegui_trascrizione, celery_app
 
 # Avvio server
 
@@ -46,7 +46,7 @@ async def ricevi_audio(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
     
     # .delay(), invia un messagio a Redis e Celery lo prenderà in carico
-    task = esegui_trascrizione_finta.delay(percorso_file)
+    task = esegui_trascrizione.delay(percorso_file)
    
     return{
         "messaggio": "Audio ricevuto e inviato in coda di trascrizione.",
