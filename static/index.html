@@ -3,30 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <title>Coda Trascrizioni</title>
+    <style>
+
+        /* Sfondo e Container */
+
+        body {  
+            
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            background-color: #98ccfcde; 
+            margin: 0;
+            padding:20px;
+
+        
+        }
+        .container { 
+
+            background-color: rgb(194, 232, 255); 
+            border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 0 auto;
+            max-width: 600px;
+                         
+        }
+        /* Titolo e Paragrafi */
+        h1 {
+            text-align: center;
+            font-size: 40px;
+            color: #05212b;
+        }
+        p {
+            font-size: 20px;
+            text-align: center;
+            color: #24869e ;
+            margin-bottom: 40px;
+
+
+        }
+
+        /* Pulsante di Registrazione */
+
+        #recordButton {
+
+            display: block;
+            margin: 0 auto 30px auto;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #0b5e7c;
+            border-radius: 20px;
+            transition: background-color 0.3s;
+
+        }
+        #recordButton:hover { 
+            background-color: #24869e;
+        
+        } /* Se ci passi sopra*/
+
+        /* Chat */
+        .chat-box{
+            
+            border-radius: 15px;
+            background-color: rgb(31, 65, 73);
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border: 5px solid #3f86a1;
+
+        }
+        /* Bolla del messaggio */
+
+        .message-bubble {
+
+            align-self: flex-end; /* a destra */
+            background-color: #24869e;
+            border-radius: 18px 18px 0 18 px;
+
+        }
+   </style>
 </head>
 <body>
-    <div style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: Arial;">
-        <h1>Dashboard Trascrizioni Asincrone</h1>
-        <p>Registra i tuoi audio. Il server li elaborerà in backround.</p>
+    <div class = "container">
+        <h1>Trying2Understand</h1>
+        <p>Registra i tuoi audio. Proverò a capirti!! :D.</p>
         <!-- PULSANTGE REGISTRAZIONE-->
-         <div style="text-align: center; margin-bottom: 40px;">
-            <button id="recordButton" style="padding : 15px; font-size: 16px; cursor: pointer;">
-                Clicca per iniziare a registrare!
-            </button>
+        <button id="recordButton" >
+                🎤
+        </button>
+         <!-- SEZIONE DELLA CHAT -->
+         <div id="chatbox" class="chat-box">
+
          </div>
-         <!-- SEZIONE DELLA CODA (TABELLA)-->
-          <h2>Lavori in coda</h2>
-          <table border="1" width="100%" style="border-collapse: collapse; text-align: left;"> 
-            <thead>
-                <tr>
-                    <th style="padding: 10px;">ID</th>
-                    <th style="padding: 10px;">Stato</th>
-                    <th style="padding: 10px;">Testo Trascritto</th>    
-                </tr>
-            </thead>
-            <tbody id="queueBody">
-            </tbody>
-        </table>
     </div>
     <script src="/static/app.js"></script>
 </body>
