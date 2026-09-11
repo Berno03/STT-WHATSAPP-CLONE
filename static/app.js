@@ -72,7 +72,7 @@ async function toggleRecording() {
 
         recordButton.textContent=" Clicca per iniziare a registrare";
         recordButton.style.backgroundColor = "";
-        recordButton.style.color = "black";
+        recordButton.style.color = "#b9ecec";
     }
 }
 async function inviaAudio(blob) {
@@ -99,7 +99,7 @@ async function inviaAudio(blob) {
 
         if(data.task_id) {
             console.log("Audio ricevuto dal server! l'ID è: ", data.task_id);
-            aggiungiTaskInTabella(data.task_id);
+            aggiungiMessaggioInChat(data.task_id);
         }
         
     }
@@ -107,47 +107,46 @@ async function inviaAudio(blob) {
         console.error("Errore di connessione con il server:", err);
     }
 }
-function aggiungiTaskInTabella(taskId){
-    //  Creiamo un nuovo elemento <tr>
-    //alert("Disegno la riga per l'id: " + taskId + "..");
+function aggiungiMessaggioInChat(taskId){
+    // Prendo il contenitore della chat invece della tabella
+    const chatBox = document.getElementById("chatBox");
 
-    const tr = document.createElement("tr");
+    // Creo la bolla del messaggio
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "message-bubble";
+    msgDiv.id = "msg-" + taskId;
 
-    //  Diamo un ID alla riga
-    tr.id = "row-" + taskId;
+    // Etichetta "NOTA VOCALE"
+    const audioLabel = document.createElement("div");
+    audioLabel.className = "audio-label";
+    audioLabel.innerHTML = "NOTA VOCALE";
 
-    // Creo la prima cella (ID)
-    const tdId = document.createElement("td");
-    tdId.innerHTML = "<small>" + taskId.substring(0, 8) + "</small>";
+    // Testo della trascrizione
+    const textDiv = document.createElement("div");
+    textDiv.className = "transcription-text";
+    textDiv.id = "text-" + taskId;
+    textDiv.textContent = "Ti sto analizzando...";
 
-    // Creo la seconda cella (STATO)
+    // Stato (In coda, Completato, Errore)
+    const statusDiv = document.createElement("div");
+    statusDiv.className = "status-indicator";
+    statusDiv.id = "status-" + taskId;
+    statusDiv.innerHTML = "Audio ricevuto ✓";
 
-    const tdStatus = document.createElement("td");
-    tdStatus.id = "status-" + taskId;
-    tdStatus.style.color = "#F39C12";
-    tdStatus.style.fontWeight = "bold";
-    tdStatus.textContent = "In coda...";
-
-    // Creo la terza cella (TESTO)
-
-    const tdText = document.createElement("td");
-    tdText.id = "text-" + taskId;
-    tdText.textContent = "-";
-
-    // Inseriamo le celle dentro la riga
-
-    tr.appendChild(tdId);
-    tr.appendChild(tdStatus);
-    tr.appendChild(tdText);
+    // Inserisco gli elementi nella bolla
+    msgDiv.appendChild(audioLabel);
+    msgDiv.appendChild(textDiv);
+    msgDiv.appendChild(statusDiv);
     
-    // Inseriamo questa nuova riga nella tabella
-
-    document.getElementById("queueBody").prepend(tr);
-    //const tbody = document.getElementById("queueBody");
-    //queueBody.prepend(tr);
+    // Inserisco la bolla nella chat
+    chatBox.appendChild(msgDiv);
+    
+    // Faccio scorrere la chat verso il basso in automatico
+    chatBox.scrollTop = chatBox.scrollHeight;
 
     controlloStatoTask(taskId);
 }
+
 function controlloStatoTask(taskId){
     
     // Fa ripetere questo blocco di codice ogni 2 secondi
@@ -159,24 +158,30 @@ function controlloStatoTask(taskId){
 
             console.log("Risposta dal server per ID " + taskId + ":", data);
             // Prendiamo dalla tabella 
-            const tdStatus = document.getElementById(`status-${taskId}`);
-            const tdText = document.getElementById(`text-${taskId}`);
+            const divStatus = document.getElementById(`status-${taskId}`);
+            const divText = document.getElementById(`text-${taskId}`);
             // Controllo la risposta del server
+
+            if (divStatus === null){
+                clearInterval(interval);
+                return;
+            }
+
 
             if(data.stato === "SUCCESS") {
                 //SUCCESSO
-                tdStatus.textContent = "Completato! :D";
-                tdStatus.style.color = "#009900";
+                divStatus.textContent = "Ho capito!";
+                divStatus.style.color = "#8E44AD";
 
-                tdText.textContent = data.risultato || data.result || "Trascrizione vuota";
+                divText.textContent = data.risultato || data.result || "Trascrizione vuota";
 
                 clearInterval(interval); //stop alla domanda del server
             }
             else if (data.stato === "FAILURE") {
                 //ERRORE
-                tdStatus.textContent = "Errore :(";
-                tdStatus.style.color = "#FF2626";
-                tdText.textContent = "Trascrizione fallita.";
+                divStatus.textContent = "Non ci ho capito nulla, scusa :(";
+                divStatus.style.color = "#FF7F50";
+                divText.textContent = "Trascrizione fallita.";
                 
                 clearInterval(interval);
             }
@@ -184,7 +189,7 @@ function controlloStatoTask(taskId){
             else {
                 //PENDING 
 
-                tdStatus.textContent = "Elaborazione in corso...";
+                divStatus.textContent = "Sto cercando di capirti...";
 
             }
         }

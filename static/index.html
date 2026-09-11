@@ -2,11 +2,23 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <title>Coda Trascrizioni</title>
     <style>
 
         /* Sfondo e Container */
+        .app-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #1a1a1a;
+        }
 
+        .app-header p {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            color: #666;
+        }
         body {  
             
             font-family: Verdana, Geneva, Tahoma, sans-serif;
@@ -78,26 +90,52 @@
 
         .message-bubble {
 
-            align-self: flex-end; /* a destra */
-            background-color: #24869e;
-            border-radius: 18px 18px 0 18 px;
+            align-self: flex-end;
+            max-width: 80%;
+            background-color: #E3F2FD; /* Blu pastello morbidissimo e luminoso */
+            color: #111111; /* Testo scuro per ottima leggibilità */
+            padding: 14px 18px;
+            border-radius: 20px 20px 4px 20px; /* Codina elegante in basso a destra */
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04); /* Ombra leggerissima */
+            border: 1px solid rgba(0,0,0,0.03); 
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+.audio-label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            color: #1976D2; /* Blu oceano per fare contrasto */
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            display: flex;
+            align-items: center;
 
         }
+.transcription-text { 
+            font-size: 15px; 
+            line-height: 1.5; 
+            color: #2c3e50; /* Grigio-blu scurissimo, molto elegante */
+        }
+
+
+
    </style>
 </head>
 <body>
     <div class = "container">
         <h1>Trying2Understand</h1>
-        <p>Registra i tuoi audio. Proverò a capirti!! :D.</p>
+        <p>Registra i tuoi audio. Proverò a capirti!!</p>
         <!-- PULSANTGE REGISTRAZIONE-->
         <button id="recordButton" >
                 🎤
         </button>
          <!-- SEZIONE DELLA CHAT -->
-         <div id="chatbox" class="chat-box">
+         <div id="chatBox" class="chat-box">
 
          </div>
     </div>
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=2"></script> <!-- ?v=2 per cancellare ogni volta le cache-->
 </body>
 </html>  
