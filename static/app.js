@@ -2,19 +2,14 @@
 
 let mediaRecorder; // Registratore
 let audioChuncks = []; // Contenitore pezzi di audio
-let isRecording = false; // Flag di registrazione
-
 // Pulsante e tabella dal file html
 
 const recordButton = document.getElementById("recordButton");
-const queueBody = document.getElementById("queueBody");
-
 // quando fai click, esegui la funzione "toggle recording"
 
 recordButton.addEventListener("click", toggleRecording);
-
 async function toggleRecording() {
-    if (isRecording == false) {
+    if (mediaRecorder?.state === "recording") { mediaRecorder.stop(); return; } // Se stai registrando, fermati
 
         try{
             // Chiediamo il permesso
@@ -41,20 +36,22 @@ async function toggleRecording() {
             inviaAudio(audioBlob);
             // Spenge il microfono di Windows/Mac
             stream.getTracks().forEach(track => track.stop());
+
+            recordButton.textContent=" 🎤 ";
+            recordButton.classList.remove("recording");
          };
         
         // Registrazione On
 
         mediaRecorder.start();
-        isRecording = true;
 
         // aggiornamento grafica Pulsante
 
         console.log("Inizio registrazione...");
 
-        recordButton.textContent=" Registrazione in corso..";
-        recordButton.style.backgroundColor = "#c039";
-        recordButton.style.color = "white";
+        recordButton.textContent="⏹ Registrazione.. Clicca per fermare ";
+        recordButton.classList.add("recording");
+
 
         }
         catch (err) {
@@ -64,18 +61,9 @@ async function toggleRecording() {
         console.error("Errore microfono:", err);
         }
     }
-    else {
-        
-        mediaRecorder.stop();
-        isRecording = false;
-        console.log("Fine registrazione");
-
-        recordButton.textContent=" Clicca per iniziare a registrare";
-        recordButton.style.backgroundColor = "";
-        recordButton.style.color = "#b9ecec";
-    }
-}
-async function inviaAudio(blob) {
+async function inviaAudio(blob,) {
+   
+    
     // Creiamo un pacco postale
 
     const formData = new FormData();
@@ -92,14 +80,18 @@ async function inviaAudio(blob) {
         const response = await fetch("/upload", {
             method: "POST",
             body: formData
-        });
+        })
+        if (!response.ok) {
+            alert("Errore nell'invio: " + response.status);
+            return;
+        }
 
     // Risposta del server
     const data = await response.json();
 
-        if(data.task_id) {
-            console.log("Audio ricevuto dal server! l'ID è: ", data.task_id);
-            aggiungiMessaggioInChat(data.task_id);
+        if(data.audio_id) {
+            console.log("Audio ricevuto dal server! l'ID è: ", data.audio_id);
+            aggiungiMessaggioInChat(data.audio_id, blob);
         }
         
     }
@@ -107,47 +99,96 @@ async function inviaAudio(blob) {
         console.error("Errore di connessione con il server:", err);
     }
 }
-function aggiungiMessaggioInChat(taskId){
+function aggiungiMessaggioInChat(audioId, audioBlob){
     // Prendo il contenitore della chat invece della tabella
     const chatBox = document.getElementById("chatBox");
+
+    //Creo un URL per ascoltare l'audio dal browser
+    const audioUrl = URL.createObjectURL(audioBlob);
 
     // Creo la bolla del messaggio
     const msgDiv = document.createElement("div");
     msgDiv.className = "message-bubble";
-    msgDiv.id = "msg-" + taskId;
+    msgDiv.id = "msg-" + audioId;
 
-    // Etichetta "NOTA VOCALE"
-    const audioLabel = document.createElement("div");
-    audioLabel.className = "audio-label";
-    audioLabel.innerHTML = "NOTA VOCALE";
-
-    // Testo della trascrizione
-    const textDiv = document.createElement("div");
-    textDiv.className = "transcription-text";
-    textDiv.id = "text-" + taskId;
-    textDiv.textContent = "Ti sto analizzando...";
-
-    // Stato (In coda, Completato, Errore)
-    const statusDiv = document.createElement("div");
-    statusDiv.className = "status-indicator";
-    statusDiv.id = "status-" + taskId;
-    statusDiv.innerHTML = "Audio ricevuto ✓";
-
-    // Inserisco gli elementi nella bolla
-    msgDiv.appendChild(audioLabel);
-    msgDiv.appendChild(textDiv);
-    msgDiv.appendChild(statusDiv);
     
-    // Inserisco la bolla nella chat
+    // Inseriamo l'HTML dentro la bolla del messaggio, con il player audio e il pulsante per mostrare/nascondere la trascrizione
+    msgDiv.innerHTML = 
+        `   <!-- Etichetta -->
+
+        <div class="audio-label"> NOTA VOCALE 
+        </div>
+
+            <!-- Player audio -->
+
+        <audio controls src="${audioUrl}" class="audio-player">
+        </audio>
+
+            <!-- Bottone Trascrizione -->
+
+        <button id="toggleBtn-${audioId}" class="toggle-btn">▼ Mostra Trascrizione
+        </button>
+        
+            <!-- Descrizione processo -->
+
+        <div id="transcriptionBox-${audioId}" class="transcription-box" style="display: none;">
+            <div id="text-${audioId}" class="transcription-text"> ...
+            </div>
+        </div>
+
+            <!-- Stato -->
+
+        <div id="status-${audioId}" class="status-indicator">Audio ricevuto, Premi "Mostra Trascrizione" per vedere il risultato
+        </div>
+        
+        `;
+
+
+
     chatBox.appendChild(msgDiv);
-    
-    // Faccio scorrere la chat verso il basso in automatico
-    chatBox.scrollTop = chatBox.scrollHeight;
 
-    controlloStatoTask(taskId);
+    // Aggiungo l'evento al pulsante per mostrare/nascondere la trascrizione
+    const toggleBtn = document.getElementById(`toggleBtn-${audioId}`);
+    const transcriptionBox = document.getElementById(`transcriptionBox-${audioId}`);
+    let avviata = false; // Stato della trascrizione
+
+    toggleBtn.addEventListener("click", async () => {
+        if (!avviata) {
+            avviata = true;
+            transcriptionBox.style.display = "block"; // Mostra la trascrizione
+            toggleBtn.textContent = "▲ Nascondi Trascrizione";
+            const ok = await avviaTrascrizione(audioId);
+            if (!ok) avviata = false; // Se la trascrizione non è partita, resetto lo stato
+            return;
+        }
+        if (transcriptionBox.style.display === "none") {
+            transcriptionBox.style.display = "block"; // Mostra la trascrizione
+            toggleBtn.textContent = "▲ Nascondi Trascrizione";
+        } else {
+            transcriptionBox.style.display = "none"; // Nascondi la trascrizione
+            toggleBtn.textContent = "▼ Mostra Trascrizione";
+        }
+    });
 }
 
-function controlloStatoTask(taskId){
+async function avviaTrascrizione(audioId) {
+    const divStatus = document.getElementById(`status-${audioId}`);
+    divStatus.textContent = "Invio in coda...";
+    try {
+        const response = await fetch("/trascrivi/" + audioId, { method: "POST" });
+        if (!response.ok) throw new Error("Errore nella richiesta di trascrizione: " + response.status);
+        const data = await response.json();
+        controlloStatoTask(audioId, data.task_id);
+        return true;
+     } catch (err) {
+        divStatus.textContent = "Errore durante l'avvio della trascrizione.";
+        console.error("Errore durante l'avvio della trascrizione.", err);
+        return false;
+     }
+}
+
+// Avvia il controllo dello stato del task
+function controlloStatoTask(audioId, taskId) {
     
     // Fa ripetere questo blocco di codice ogni 2 secondi
     const interval = setInterval(async () => {
@@ -158,8 +199,8 @@ function controlloStatoTask(taskId){
 
             console.log("Risposta dal server per ID " + taskId + ":", data);
             // Prendiamo dalla tabella 
-            const divStatus = document.getElementById(`status-${taskId}`);
-            const divText = document.getElementById(`text-${taskId}`);
+            const divStatus = document.getElementById(`status-${audioId}`);
+            const divText = document.getElementById(`text-${audioId}`);
             // Controllo la risposta del server
 
             if (divStatus === null){
@@ -172,8 +213,6 @@ function controlloStatoTask(taskId){
                 //SUCCESSO
                 divStatus.textContent = "Ho capito!";
                 divStatus.style.color = "#8E44AD";
-
-                divText.textContent = data.risultato || data.result || "Trascrizione vuota";
 
                 clearInterval(interval); //stop alla domanda del server
             }
@@ -195,9 +234,36 @@ function controlloStatoTask(taskId){
         }
         catch(err) {
             console.error("Errore durante il controllo dello stato.", err);
-            
-            clearInterval(interval);
         }
-
-    }, 2000); //2000 = 2 secondi
+    }, 2000); // Controlla ogni 2 secondi
 }
+
+const nomi = { queued: "In coda", processing: "In elaborazione", error: "Fallito", done: "Completato" };
+
+async function aggiornaCoda() {
+    try {
+        const res = await fetch("/jobs");
+        const data = await res.json();
+        const conta = { queued: 0, processing: 0, error: 0, done: 0 };
+        const lista = document.getElementById("job-list");
+            
+        lista.innerHTML = ""; // Pulisce la lista prima di aggiornarla
+        data.jobs.forEach(job => {
+            const s = job.stato === "SUCCESS" ? "done" 
+                    : job.stato === "FAILURE" ? "error" 
+                    : job.stato === "STARTED" ? "processing" : "queued";
+            conta[s]++;
+            const li = document.createElement("li");
+            const ora = new Date(job.creato * 1000).toLocaleTimeString();
+            li.textContent = `[${ora}] ${job.file} - ${nomi[s]}`;
+            lista.appendChild(li);
+        });
+
+
+        for (const k in conta) document.getElementById("count-" +k).textContent = conta[k];
+    }catch (err) {
+            console.error("Errore durante l'aggiornamento della coda.", err);
+    }
+}
+aggiornaCoda();
+setInterval(aggiornaCoda, 2000); // Aggiorna la coda ogni 2 secondi

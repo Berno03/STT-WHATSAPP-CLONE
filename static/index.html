@@ -1,24 +1,13 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <title>Trying2UnderstandU</title>
     <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <title>Coda Trascrizioni</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
 
         /* Sfondo e Container */
-        .app-header h1 {
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: #1a1a1a;
-        }
 
-        .app-header p {
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 500;
-            color: #666;
-        }
         body {  
             
             font-family: Verdana, Geneva, Tahoma, sans-serif;
@@ -67,12 +56,28 @@
             transition: background-color 0.3s;
 
         }
+
+        /* Se ci passi sopra*/
+
         #recordButton:hover { 
             background-color: #24869e;
         
-        } /* Se ci passi sopra*/
+        } 
+        
+        /* Se stai registrando */
 
+        #recordButton.recording { 
+            background-color: #c0392b; 
+            color: #fff; 
+        }
+
+        /* Se ci passi sopra mentre stai registrando*/
+        #recordButton.recording:hover { 
+            background-color: #e74c3c; 
+        } 
+        
         /* Chat */
+
         .chat-box{
             
             border-radius: 15px;
@@ -86,6 +91,7 @@
             border: 5px solid #3f86a1;
 
         }
+
         /* Bolla del messaggio */
 
         .message-bubble {
@@ -103,7 +109,9 @@
             gap: 6px;
         }
 
-.audio-label { 
+        /* Etichetta audio */
+
+        .audio-label { 
             font-size: 11px; 
             font-weight: 700; 
             color: #1976D2; /* Blu oceano per fare contrasto */
@@ -113,29 +121,78 @@
             align-items: center;
 
         }
-.transcription-text { 
+
+        .audio-player { 
+            height: 30px;
+            width: 100%;
+            outline: none;
+            margin-top: 5px; 
+        }
+        
+        .toggle-btn { 
+            background-color: #1976D2; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 13px;
+            align-self: flex-start;
+        }
+
+        .transcription-box { 
+            background-color: #E3F2FD; 
+            padding: 10px; 
+            border-radius: 12px; 
+            margin-top: 10px; 
+        }
+
+        .transcription-text { 
             font-size: 15px; 
             line-height: 1.5; 
             color: #2c3e50; /* Grigio-blu scurissimo, molto elegante */
         }
 
+        .status-indicator { 
+            font-size: 13px; 
+            color: #388E3C; /* Verde scuro per indicare successo */
+            margin-top: 8px; 
+            align-self: flex-start;
+        }
 
 
    </style>
 </head>
 <body>
+    
     <div class = "container">
-        <h1>Trying2Understand</h1>
+        <h1>Trying2UnderstandU</h1>
         <p>Registra i tuoi audio. Proverò a capirti!!</p>
         <!-- PULSANTGE REGISTRAZIONE-->
         <button id="recordButton" >
                 🎤
         </button>
-         <!-- SEZIONE DELLA CHAT -->
-         <div id="chatBox" class="chat-box">
+        <!-- SEZIONE DELLA CHAT -->
+        <div id="chatBox" class="chat-box">
 
-         </div>
+        </div>
+
+        <details class="queue-panel">
+        <summary>Coda di lavoro</summary>
+            <ul>
+                <li>In coda: <span id="count-queued">0</span></li>
+                <li>In elaborazione: <span id="count-processing">0</span></li>
+                <li>Completati: <span id="count-done">0</span></li>
+                <li>Falliti: <span id="count-error">0</span></li>
+            </ul>
+            <ul id="job-list">
+                <!-- Qui verranno aggiunti i lavori -->
+            </ul>
+        </details>
     </div>
-    <script src="/static/app.js?v=2"></script> <!-- ?v=2 per cancellare ogni volta le cache-->
+
+    <script src="/static/app.js?v=9" defer></script> <!-- ?v=2 per cancellare ogni volta le cache-->
+
+
 </body>
 </html>  
